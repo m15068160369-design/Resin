@@ -87,6 +87,13 @@ func writeProxyError(w http.ResponseWriter, pe *ProxyError) {
 	if pe.HTTPCode == http.StatusProxyAuthRequired {
 		w.Header().Set("Proxy-Authenticate", `Basic realm="Resin"`)
 	}
+	// [patch lou] Error responses are emitted before the client request body
+	// has been fully read (upstream dial failed, so ReverseProxy never consumed
+	// r.Body). Go's http.Server drain limit (256KB) will close the connection
+	// and leave a poisoned idle conn in the client's pool. Setting Connection:
+	// close tells the client not to reuse this connection, breaking the
+	// 500→504→400 cascade on large requests (>256KB body + upstream failure).
+	w.Header().Set("Connection", "close")
 	w.Header().Set("X-Resin-Error", pe.ResinError)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(pe.HTTPCode)
