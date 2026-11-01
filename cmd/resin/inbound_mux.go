@@ -72,6 +72,8 @@ func newEndpointInboundMux(
 }
 
 func writeEndpointCapabilityDisabled(w http.ResponseWriter) {
+	// [patch lou] Same connection-poisoning rationale as writeProxyError.
+	w.Header().Set("Connection", "close")
 	w.Header().Set("X-Resin-Error", "ENDPOINT_CAPABILITY_DISABLED")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusForbidden)
@@ -128,6 +130,8 @@ func shouldRejectReverseProxyByToken(r *http.Request, proxyToken string) bool {
 }
 
 func writeInboundAuthFailed(w http.ResponseWriter) {
+	// [patch lou] Same connection-poisoning rationale as writeProxyError.
+	w.Header().Set("Connection", "close")
 	w.Header().Set("X-Resin-Error", "AUTH_FAILED")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusForbidden)
